@@ -5,7 +5,7 @@ import globals from 'globals';
 import tsEslint from 'typescript-eslint';
 
 export default defineConfig(
-	globalIgnores( [ 'node_modules/', 'dist/', '.data/' ] ),
+	globalIgnores( [ 'node_modules/', 'dist/', 'dist-spacefast/', '.data/' ] ),
 	js.configs.recommended,
 	tsEslint.configs.recommended,
 	pluginPrettier,
