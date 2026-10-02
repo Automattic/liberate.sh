@@ -6,8 +6,8 @@
 		"database": true,
 		"compatibilityDate": "2026-07-01"
 	},
-	// The page owns /j/<id>, so unmatched paths fall back to it rather than a 404.
-	"fallback": "index.html",
+	// /j/<id> has its own route, so anything matching nothing at all is a genuine 404.
+	"fallback": { "path": "/404.html", "status": 404 },
 	"headers": [
 		{
 			"source": "/*",
