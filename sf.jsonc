@@ -7,5 +7,25 @@
 		"compatibilityDate": "2026-07-01"
 	},
 	// The page owns /j/<id>, so unmatched paths fall back to it rather than a 404.
-	"fallback": "index.html"
+	"fallback": "index.html",
+	"headers": [
+		{
+			"source": "/**",
+			"headers": [
+				{
+					"key": "Content-Security-Policy",
+					"value": "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+				},
+				{ "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
+				{ "key": "X-Content-Type-Options", "value": "nosniff" },
+				{ "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+				{ "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+			]
+		},
+		{
+			// A job's page is reachable only by its link; keep it out of search results.
+			"source": "/j/**",
+			"headers": [ { "key": "X-Robots-Tag", "value": "noindex, nofollow" } ]
+		}
+	]
 }

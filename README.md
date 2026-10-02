@@ -45,7 +45,9 @@ Then open http://localhost:8080. `npm run build` followed by `npm start` runs th
 
 ## Deploying
 
-It ships as a container and runs anywhere one does; `railway.json` configures a [Railway](https://railway.com/) service. It needs the application credentials, a small persistent directory for the job records, and a single replica so every request sees the same records.
+liberate.sh runs on [Spacefast](https://spacefast.com/): pushing to `trunk` builds `npm run build:spacefast`, which puts the page, the worker routes and `sf.jsonc` into `dist-spacefast/`. There the routes run as Functions and the job records live in the space's own database, so the only things to configure are `WPCOM_CLIENT_ID` and `WPCOM_CLIENT_SECRET`.
+
+It also ships as a container for anywhere else (`Dockerfile`, `railway.json`): the same app with Express in front and the records on disk, which needs a small persistent directory and a single replica so every request sees the same records.
 
 ## Guard rails
 

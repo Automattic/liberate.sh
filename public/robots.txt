@@ -1,0 +1,8 @@
+# A liberated site's link is private: knowing the id is the only way in, so it stays out of
+# search results.
+User-agent: *
+Disallow: /j/
+Disallow: /api/
+Allow: /
+
+Sitemap: https://liberate.sh/sitemap.xml

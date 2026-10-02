@@ -119,10 +119,22 @@ function startMakers() {
 	}, 2600 );
 }
 
+/** A job's page belongs to whoever holds the link, not to search engines. */
+function setIndexable( indexable: boolean ) {
+	const robots = document.querySelector< HTMLMetaElement >( 'meta[name="robots"]' );
+	if ( robots ) {
+		robots.content = indexable ? 'index, follow, max-image-preview:large' : 'noindex, nofollow';
+	}
+	document
+		.querySelector( 'link[rel="canonical"]' )
+		?.setAttribute( 'href', indexable ? 'https://liberate.sh/' : window.location.href );
+}
+
 function route() {
 	teardown();
 	teardown = () => {};
 	const id = window.location.pathname.match( /^\/j\/([^/]+)$/ )?.[ 1 ];
+	setIndexable( ! id );
 	if ( id && isJobId( id ) ) {
 		watchJob( id );
 	} else {
