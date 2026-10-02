@@ -61,6 +61,64 @@ function restartStrike( element: Element ) {
 	}
 }
 
+/** The products this one came from, shown one at a time in the footer. */
+const MAKERS = [
+	{
+		name: 'WordPress Studio',
+		href: 'https://developer.wordpress.com/studio/',
+		logo: 'studio.svg',
+		ratio: 1,
+		label: 'Studio',
+	},
+	{ name: 'Tumblr', href: 'https://www.tumblr.com', logo: 'tumblr.svg', ratio: 73 / 15 },
+	{ name: 'Woo', href: 'https://woocommerce.com', logo: 'woo.svg', ratio: 58 / 15 },
+	{ name: 'Beeper', href: 'https://www.beeper.com', logo: 'beeper.svg', ratio: 73 / 15 },
+	{
+		name: 'Pocket Casts',
+		href: 'https://pocketcasts.com',
+		logo: 'pocket-casts.svg',
+		ratio: 76 / 15,
+	},
+	{ name: 'Day One', href: 'https://dayoneapp.com', logo: 'day-one.svg', ratio: 96 / 15 },
+	{ name: 'mesh', href: 'https://mesh.com', logo: 'mesh.svg', ratio: 66 / 15 },
+	{ name: 'WordPress.com', href: 'https://wordpress.com', logo: 'wordpress.svg', ratio: 111 / 15 },
+];
+
+/** Cycle the footer's logos, the way the family they come from is usually introduced. */
+function startMakers() {
+	const link = document.querySelector< HTMLAnchorElement >( '.maker' );
+	const stack = link?.querySelector< HTMLElement >( '.maker-stack' );
+	if ( ! link || ! stack ) {
+		return;
+	}
+
+	const widthOf = ( maker: ( typeof MAKERS )[ number ] ) =>
+		`${ ( maker.label ? maker.ratio + 3.6 : maker.ratio ) * 1.07 }em`;
+
+	stack.innerHTML = MAKERS.map(
+		( maker ) =>
+			`<span><img src="/makers/${ maker.logo }" alt="" />${
+				maker.label ? `<span class="label">${ maker.label }</span>` : ''
+			}</span>`
+	).join( '' );
+	const layers = [ ...stack.children ] as HTMLElement[];
+
+	let index = 0;
+	const show = () => {
+		const maker = MAKERS[ index ];
+		layers.forEach( ( layer, at ) => layer.classList.toggle( 'now', at === index ) );
+		stack.style.width = widthOf( maker );
+		link.href = maker.href;
+		link.setAttribute( 'aria-label', maker.name );
+	};
+	show();
+
+	window.setInterval( () => {
+		index = ( index + 1 ) % MAKERS.length;
+		show();
+	}, 2600 );
+}
+
 function route() {
 	teardown();
 	teardown = () => {};
@@ -351,6 +409,7 @@ async function start() {
 		);
 	}
 	window.addEventListener( 'popstate', route );
+	startMakers();
 	route();
 }
 

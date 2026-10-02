@@ -388,3 +388,88 @@ a:hover {
 		animation: none;
 	}
 }
+
+/* The makers line: one logo at a time, each fading up into place as the last fades out. */
+.maker {
+	display: inline-flex;
+	align-items: center;
+	margin-left: 0.35em;
+	vertical-align: -0.22em;
+	text-decoration: none;
+	transition: opacity 0.15s ease;
+}
+
+.maker:hover {
+	opacity: 0.7;
+}
+
+.maker-stack {
+	position: relative;
+	display: block;
+	height: 1.07em;
+	transition: width 0.45s cubic-bezier( 0.4, 0, 0.2, 1 );
+}
+
+.maker-stack > * {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 0.3em;
+	white-space: nowrap;
+	color: var( --ink );
+	opacity: 0;
+	filter: blur( 4px );
+	transform: translateY( 8px );
+	transition: opacity 0.45s ease, filter 0.45s ease, transform 0.45s ease;
+}
+
+.maker-stack > .now {
+	opacity: 1;
+	filter: none;
+	transform: none;
+}
+
+.maker-stack img,
+.maker-stack svg {
+	display: block;
+	height: 1.07em;
+	width: auto;
+	max-width: none;
+}
+
+.maker-stack .label {
+	font-weight: 500;
+	letter-spacing: -0.02em;
+}
+
+@media ( prefers-reduced-motion: reduce ) {
+	.maker-stack,
+	.maker-stack > * {
+		transition: none;
+	}
+
+	.maker-stack > * {
+		filter: none;
+		transform: none;
+	}
+}
+
+.host {
+	display: inline-flex;
+	align-items: center;
+	margin-left: 0.4em;
+	vertical-align: -0.28em;
+	transition: opacity 0.15s ease;
+}
+
+.host:hover {
+	opacity: 0.7;
+}
+
+.host img {
+	display: block;
+	height: 1.35em;
+	width: auto;
+}
