@@ -1,0 +1,21 @@
+{
+	"compilerOptions": {
+		"target": "ES2023",
+		"lib": [ "ES2023", "DOM", "DOM.Iterable" ],
+		"types": [ "vitest/globals", "node", "vite/client" ],
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"allowJs": true,
+		"esModuleInterop": true,
+		"resolveJsonModule": true,
+		"rewriteRelativeImportExtensions": true,
+		"erasableSyntaxOnly": true,
+		"verbatimModuleSyntax": true,
+		"skipLibCheck": true,
+		"strict": true,
+		"noImplicitAny": true,
+		"noEmit": true
+	},
+	"include": [ "**/*" ],
+	"exclude": [ "**/node_modules/**/*", "**/dist/**/*", ".data/**/*" ]
+}
