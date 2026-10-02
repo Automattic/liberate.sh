@@ -1,4 +1,5 @@
 import { parseSiteUrl, UserError } from '../../src/server/guards.ts';
+import { countStart } from '../_lib/limit.ts';
 import {
 	asUserError,
 	fetchTitle,
@@ -23,6 +24,7 @@ export async function POST( request: Request, context: Context ) {
 			throw new UserError( 'Please confirm that you own this site or may copy it.' );
 		}
 		const url = parseSiteUrl( body.url );
+		await countStart( context.env.DB, request, config.jobsPerHour );
 		if (
 			config.turnstile &&
 			! ( await verifyTurnstile( config.turnstile.secretKey, body.turnstileToken, undefined ) )
