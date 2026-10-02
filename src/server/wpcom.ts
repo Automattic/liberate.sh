@@ -1,4 +1,4 @@
-import { UserError, assertPublicHost } from './guards.ts';
+import { UserError } from './guards.ts';
 import type { Config } from './config.ts';
 import type { JobRecord } from './store.ts';
 import type { JobView } from '../shared.ts';
@@ -270,13 +270,13 @@ const decode = ( text: string ) =>
 /**
  * The source page's own title, for the headline. WordPress.com reports only bounded counts
  * about a capture, never the site's text, so the name is read here instead. Redirects are
- * followed by hand because every hop has to be a public address too.
+ * followed by hand because `checkHost` has to vouch for every hop, not just the first.
  */
-export async function fetchTitle( url: string ) {
+export async function fetchTitle( url: string, checkHost: ( host: string ) => Promise< void > ) {
 	let next = url;
 	for ( let hop = 0; hop < 3; hop++ ) {
 		const target = new URL( next );
-		await assertPublicHost( target.hostname );
+		await checkHost( target.hostname );
 		const response = await fetch( target, {
 			redirect: 'manual',
 			signal: AbortSignal.timeout( 10_000 ),
@@ -291,9 +291,10 @@ export async function fetchTitle( url: string ) {
 			return undefined;
 		}
 		// The title is in the head, so the rest of the page is never read.
+		const decoder = new TextDecoder();
 		let head = '';
 		for await ( const chunk of response.body ) {
-			head += Buffer.from( chunk ).toString( 'utf8' );
+			head += decoder.decode( chunk as Uint8Array, { stream: true } );
 			if ( head.length > 64_000 || /<\/title>/i.test( head ) ) {
 				break;
 			}

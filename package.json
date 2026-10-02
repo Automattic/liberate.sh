@@ -21,7 +21,8 @@
 		"lint": "eslint .",
 		"test": "vitest run",
 		"typecheck": "tsc -p tsconfig.json --noEmit",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"build:spacefast": "vite build && node scripts/build-spacefast.mjs"
 	},
 	"dependencies": {
 		"express": "^4.22.0",

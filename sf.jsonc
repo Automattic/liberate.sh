@@ -1,0 +1,11 @@
+{
+	"name": "liberate.sh",
+	"runtime": {
+		"kind": "functions",
+		"database": true,
+		"fetch": true,
+		"compatibilityDate": "2026-07-01"
+	},
+	// The page owns /j/<id>, so unmatched paths fall back to it rather than a 404.
+	"fallback": "index.html"
+}
