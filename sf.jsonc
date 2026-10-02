@@ -10,7 +10,7 @@
 	"fallback": "index.html",
 	"headers": [
 		{
-			"source": "/**",
+			"source": "/*",
 			"headers": [
 				{
 					"key": "Content-Security-Policy",
@@ -24,7 +24,7 @@
 		},
 		{
 			// A job's page is reachable only by its link; keep it out of search results.
-			"source": "/j/**",
+			"source": "/j/*",
 			"headers": [ { "key": "X-Robots-Tag", "value": "noindex, nofollow" } ]
 		}
 	]
