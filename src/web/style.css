@@ -328,6 +328,12 @@ a:hover {
 	margin: 26px 0 0;
 }
 
+.try {
+	max-width: 60ch;
+	margin-top: 10px;
+	color: var( --muted );
+}
+
 .how {
 	max-width: 70ch;
 	margin-top: 22px;
@@ -340,9 +346,19 @@ a:hover {
 	cursor: pointer;
 }
 
-.how ul {
+.how ul,
+.how ol {
 	margin: 4px 0 0;
-	padding-left: 1.1em;
+	padding-left: 1.3em;
+}
+
+.how p {
+	margin: 14px 0 0;
+}
+
+.how code {
+	font-family: var( --mono );
+	font-size: 0.9em;
 }
 
 .how li {

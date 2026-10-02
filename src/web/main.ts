@@ -368,17 +368,29 @@ const done = ( job: JobView ) => `
 		<a href="https://pressable.com/">Pressable</a> ·
 		or any WordPress host.
 	</p>
+	<p class="hosts try">
+		In no hurry? Open it in <a href="https://developer.wordpress.com/studio/">Studio</a>, the free
+		WordPress app, and make it yours on your own machine first — change the colours, rewrite the
+		words, break things. Publish when it feels like yours.
+	</p>
 	<details class="how">
 		<summary>How do I move in?</summary>
-		<ul>
-			<li><strong>WordPress.com or Pressable:</strong> open the zip in
-				<a href="https://developer.wordpress.com/studio/">Studio</a>, the free WordPress app,
-				check your site, then <a href="https://developer.wordpress.com/docs/developer-tools/studio/sync/">push it</a>
-				to your new host.</li>
-			<li><strong>Any other host:</strong> the zip holds your wp-content folder and an SQLite
-				database. Hosts that run the SQLite integration take it as it is; everywhere else,
-				open it in Studio first and export or push from there.</li>
-		</ul>
+		<ol>
+			<li>Install <a href="https://developer.wordpress.com/studio/">Studio</a>, the free local
+				WordPress app for Mac, Windows and Linux.</li>
+			<li>Add a site in Studio, open its <strong>Import / Export</strong> tab, and drop this zip
+				in. It replaces that site's files and database with yours.</li>
+			<li>Open the site. It runs on your own machine, so you can rewrite pages, swap the theme and
+				fix whatever came across badly, with nothing public and nothing to pay for.</li>
+			<li>When it's ready, <strong>Connect site</strong> points Studio at a WordPress.com site —
+				it can create one for you — and <strong>Push</strong> puts your copy online.
+				<a href="https://developer.wordpress.com/docs/developer-tools/studio/sync/">Sync</a> keeps
+				working after that: push again when you change something, pull to bring the live site
+				back down.</li>
+		</ol>
+		<p><strong>Somewhere else?</strong> The zip holds your <code>wp-content</code> folder and an
+			SQLite database. Hosts that run the SQLite integration take it as it is; everywhere else,
+			import it into Studio first and export or push from there.</p>
 	</details>
 	<p class="fine">Your files are deleted ${ expiry(
 		job.expiresAt
