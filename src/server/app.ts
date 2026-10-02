@@ -3,7 +3,8 @@ import express, { type ErrorRequestHandler } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { isJobId, type PublicConfig } from '../shared.ts';
 import { APP_ROOT, type Config } from './config.ts';
-import { assertPublicHost, parseSiteUrl, UserError, verifyTurnstile } from './guards.ts';
+import { assertPublicHost } from './dns-guard.ts';
+import { parseSiteUrl, UserError, verifyTurnstile } from './guards.ts';
 import {
 	asUserError,
 	fetchTitle,
@@ -113,7 +114,7 @@ export async function createApp( {
 				await checkHost( url.hostname );
 
 				// The headline wants the site's own name, and a title that never arrives costs nothing.
-				const siteName = await fetchTitle( url.href )
+				const siteName = await fetchTitle( url.href, checkHost )
 					.then( siteNameFrom )
 					.catch( () => undefined );
 				const session = await client.create( url.href ).catch( async ( error ) => {

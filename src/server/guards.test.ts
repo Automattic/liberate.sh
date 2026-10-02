@@ -1,4 +1,5 @@
-import { assertPublicHost, parseSiteUrl } from './guards.ts';
+import { assertPublicHost } from './dns-guard.ts';
+import { parseSiteUrl } from './guards.ts';
 import { isPublicAddress } from './network.mjs';
 
 describe( 'parseSiteUrl', () => {

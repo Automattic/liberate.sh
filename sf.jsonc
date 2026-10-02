@@ -1,0 +1,11 @@
+{
+	"name": "liberate.sh",
+	"runtime": {
+		"kind": "functions",
+		// A D1-shaped binding to this space's database, where the job records live.
+		"database": true,
+		"compatibilityDate": "2026-07-01"
+	},
+	// The page owns /j/<id>, so unmatched paths fall back to it rather than a 404.
+	"fallback": "index.html"
+}

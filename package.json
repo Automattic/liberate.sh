@@ -21,7 +21,8 @@
 		"lint": "eslint .",
 		"test": "vitest run",
 		"typecheck": "tsc -p tsconfig.json --noEmit",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"build:spacefast": "vite build && node scripts/build-spacefast.mjs"
 	},
 	"dependencies": {
 		"express": "^4.22.0",
@@ -33,6 +34,7 @@
 		"@fontsource/dm-mono": "^5.3.0",
 		"@types/express": "^4.17.23",
 		"@types/node": "^24.0.0",
+		"esbuild": "^0.28.2",
 		"eslint": "^10.9.1",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-prettier": "^5.5.6",

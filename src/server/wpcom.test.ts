@@ -196,12 +196,18 @@ describe( 'asUserError', () => {
 } );
 
 describe( 'fetchTitle', () => {
+	const check = async ( host: string ) => {
+		if ( host === '127.0.0.1' ) {
+			throw new Error( 'not a public address' );
+		}
+	};
+
 	it( 'reads the title the source page gives itself', async () => {
 		vi.stubGlobal(
 			'fetch',
 			vi.fn( async () => new Response( '<html><head><title>Tom &amp; Jerry</title></head>' ) )
 		);
-		expect( await fetchTitle( 'https://mysite.com/' ) ).toBe( 'Tom & Jerry' );
+		expect( await fetchTitle( 'https://mysite.com/', check ) ).toBe( 'Tom & Jerry' );
 	} );
 
 	it( 'follows a redirect, and checks where it lands', async () => {
@@ -215,7 +221,7 @@ describe( 'fetchTitle', () => {
 					: new Response( '<title>Acme</title>' );
 			} )
 		);
-		expect( await fetchTitle( 'https://mysite.com/' ) ).toBe( 'Acme' );
+		expect( await fetchTitle( 'https://mysite.com/', check ) ).toBe( 'Acme' );
 		expect( seen ).toEqual( [ 'https://mysite.com/', 'https://www.mysite.com/' ] );
 	} );
 
@@ -227,7 +233,7 @@ describe( 'fetchTitle', () => {
 					new Response( null, { status: 302, headers: { location: 'http://127.0.0.1/' } } )
 			)
 		);
-		await expect( fetchTitle( 'https://mysite.com/' ) ).rejects.toThrow();
+		await expect( fetchTitle( 'https://mysite.com/', check ) ).rejects.toThrow();
 	} );
 } );
 
