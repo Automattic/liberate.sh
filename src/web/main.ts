@@ -11,6 +11,7 @@ import {
 	type PublicConfig,
 	type Step,
 } from '../shared.ts';
+import { setupPrompt } from './prompt.ts';
 
 declare global {
 	interface Window {
@@ -274,6 +275,9 @@ function watchJob( id: string ) {
 		if ( next !== phase ) {
 			phase = next;
 			stage.innerHTML = { working, done, failed }[ next ]( job );
+			if ( next === 'done' ) {
+				wireCopyPrompt( job );
+			}
 			const titles = { working: 'Liberating', done: 'Free', failed: 'Couldn’t free' };
 			document.title = `${ titles[ next ] }: ${ siteLabel( job ) } · liberate.sh`;
 		}
@@ -373,7 +377,12 @@ const done = ( job: JobView ) => `
 		<a class="button primary" href="/api/jobs/${ job.id }/files/site" download>
 			Download your site <small>.zip · ${ megabytes( job.bytes ) }</small>
 		</a>
+		<button type="button" class="button copy-prompt">
+			Copy setup prompt <small>for your AI agent</small>
+		</button>
 	</div>
+	<p class="copied" role="status"></p>
+	<textarea class="prompt" readonly hidden aria-label="Setup prompt"></textarea>
 	<p class="hosts">
 		Give it a new home:
 		<a href="https://wordpress.com/hosting/">WordPress.com</a> ·
@@ -383,7 +392,8 @@ const done = ( job: JobView ) => `
 	<p class="hosts try">
 		In no hurry? Open it in <a href="https://developer.wordpress.com/studio/">Studio</a>, the free
 		WordPress app, and make it yours on your own machine first — change the colours, rewrite the
-		words, break things. Publish when it feels like yours.
+		words, break things. Publish when it feels like yours. Working with an AI agent that knows
+		Studio? Copy the setup prompt, paste it in, and it does the setting up for you.
 	</p>
 	<details class="how">
 		<summary>How do I move in?</summary>
@@ -407,6 +417,26 @@ const done = ( job: JobView ) => `
 	<p class="fine">Your files are deleted ${ expiry(
 		job.expiresAt
 	) }. <a href="/">Liberate another site</a></p>`;
+
+function wireCopyPrompt( job: JobView ) {
+	const button = stage.querySelector< HTMLButtonElement >( '.copy-prompt' )!;
+	const status = stage.querySelector< HTMLElement >( '.copied' )!;
+	const fallback = stage.querySelector< HTMLTextAreaElement >( '.prompt' )!;
+	button.addEventListener( 'click', async () => {
+		const prompt = setupPrompt( job, window.location.origin );
+		try {
+			await navigator.clipboard.writeText( prompt );
+			fallback.hidden = true;
+			status.textContent = 'Copied. Paste it into Claude, or any agent that can use Studio.';
+		} catch {
+			// No clipboard (an insecure origin, a denied permission): hand it over to copy by hand.
+			fallback.value = prompt;
+			fallback.hidden = false;
+			fallback.select();
+			status.textContent = 'Couldn’t reach the clipboard. Here it is to copy yourself.';
+		}
+	} );
+}
 
 const failed = ( job: JobView ) => `
 	<h1 class="headline">Couldn’t free<br>${ siteHeading( job ) }.</h1>

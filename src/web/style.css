@@ -310,6 +310,10 @@ a:hover {
 	background: #f3f3ef;
 }
 
+button.button {
+	cursor: pointer;
+}
+
 .button.primary {
 	background: var( --ink );
 	color: var( --paper );
@@ -326,6 +330,32 @@ a:hover {
 
 .hosts {
 	margin: 26px 0 0;
+}
+
+.copied:not( :empty ) {
+	margin: 12px 0 0;
+	color: var( --muted );
+	font: 500 0.95rem/1.45 var( --mono );
+}
+
+.prompt {
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 70ch;
+	height: 14em;
+	margin-top: 10px;
+	padding: 12px 14px;
+	border: 2px solid var( --rule );
+	border-radius: 10px;
+	color: var( --ink );
+	background: var( --paper );
+	font: 400 0.875rem/1.5 var( --mono );
+	resize: vertical;
+}
+
+.prompt[hidden] {
+	display: none;
 }
 
 .try {
@@ -391,7 +421,9 @@ a:hover {
 
 	.button {
 		flex: 1 1 100%;
+		flex-wrap: wrap;
 		justify-content: center;
+		white-space: nowrap;
 	}
 }
 
