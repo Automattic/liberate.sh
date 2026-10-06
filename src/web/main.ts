@@ -410,9 +410,8 @@ const done = ( job: JobView ) => `
 				working after that: push again when you change something, pull to bring the live site
 				back down.</li>
 		</ol>
-		<p><strong>Somewhere else?</strong> The zip holds your <code>wp-content</code> folder and an
-			SQLite database. Hosts that run the SQLite integration take it as it is; everywhere else,
-			import it into Studio first and export or push from there.</p>
+		<p><strong>Somewhere else?</strong> The zip holds your <code>wp-content</code> folder and your
+			site's database, so you can take it to any WordPress host.</p>
 	</details>
 	<p class="fine">Your files are deleted ${ expiry(
 		job.expiresAt
