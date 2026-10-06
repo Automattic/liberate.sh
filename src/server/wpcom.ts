@@ -38,15 +38,20 @@ export interface PreviewClient {
 
 /** Capacity or a passing deploy, not a bad address. */
 const BUSY_CODES = new Set( [
-	'static_site_import_preview_daily_limit',
-	'static_site_import_session_limit_exceeded',
 	'static_site_import_preview_storage_failed',
 	'static_site_import_preview_busy',
 	'static_site_import_preview_unavailable',
 ] );
+const DAILY_LIMIT_CODE = 'static_site_import_preview_daily_limit';
+const SESSION_LIMIT_CODE = 'static_site_import_session_limit_exceeded';
 
 const UNUSABLE_SOURCE = 'We couldn’t copy this site. It may block automated visits.';
 const BUSY = 'liberate.sh is at capacity right now. Please try again later.';
+/** Every capture slot is taken, and one frees up as soon as a capture finishes. */
+const SLOTS_FULL =
+	'liberate.sh is already copying as many sites as it can at once. Please try again in a few minutes.';
+const DAILY_LIMIT =
+	'liberate.sh has copied all the sites it can for today. Please try again tomorrow.';
 const QUALITY_WARNING =
 	'Parts of this site didn’t convert cleanly, so some pages may be missing pieces.';
 
@@ -63,7 +68,7 @@ class ApiError extends Error {
 
 /** True when WordPress.com is holding all of this app's capture slots. */
 export const isSessionLimit = ( error: unknown ) =>
-	( error as { code?: string } )?.code === 'static_site_import_session_limit_exceeded';
+	( error as { code?: string } )?.code === SESSION_LIMIT_CODE;
 
 /** Turn an API refusal into what the visitor should be told. */
 export function asUserError( error: unknown ) {
@@ -74,6 +79,12 @@ export function asUserError( error: unknown ) {
 	}
 	if ( code === 'invalid_static_site_source_url' ) {
 		return new UserError( 'That site needs to be reachable at a public https:// address.' );
+	}
+	if ( code === SESSION_LIMIT_CODE ) {
+		return new UserError( SLOTS_FULL, 503 );
+	}
+	if ( code === DAILY_LIMIT_CODE ) {
+		return new UserError( DAILY_LIMIT, 503 );
 	}
 	return BUSY_CODES.has( code ) || status === 429 ? new UserError( BUSY, 503 ) : error;
 }

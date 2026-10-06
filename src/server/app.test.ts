@@ -15,14 +15,14 @@ let dir: string;
 let server: Server;
 let base: string;
 let session: Session;
-let refuse: Error | undefined;
+/** What the next calls to create are refused with, one each. */
+let refusals: Error[];
 let revoked: string[];
 
 const client: PreviewClient = {
 	async create() {
-		if ( refuse ) {
-			const thrown = refuse;
-			refuse = undefined;
+		const thrown = refusals.shift();
+		if ( thrown ) {
 			throw thrown;
 		}
 		return session;
@@ -41,7 +41,7 @@ const client: PreviewClient = {
 
 beforeEach( async () => {
 	session = { session_id: ID, state: 'capturing', progress: { pages_captured: 2, pages_total: 8 } };
-	refuse = undefined;
+	refusals = [];
 	revoked = [];
 	dir = fs.mkdtempSync( path.join( os.tmpdir(), 'liberate-app-' ) );
 	const config = loadConfig( {
@@ -82,6 +82,10 @@ afterEach( () => {
 	fs.rmSync( dir, { recursive: true, force: true } );
 } );
 
+/** WordPress.com's answer when every one of the app's capture slots is taken. */
+const full = () =>
+	Object.assign( new Error( 'full' ), { code: 'static_site_import_session_limit_exceeded' } );
+
 const create = ( body: unknown ) =>
 	fetch( `${ base }/api/jobs`, {
 		method: 'POST',
@@ -116,10 +120,21 @@ describe( 'POST /api/jobs', () => {
 	} );
 
 	it( 'passes on what WordPress.com says when it will not start one', async () => {
-		refuse = new UserError( 'liberate.sh is at capacity right now. Please try again later.', 503 );
+		refusals = [
+			new UserError( 'liberate.sh is at capacity right now. Please try again later.', 503 ),
+		];
 		const response = await create( { url: 'mysite.com', consent: true } );
 		expect( response.status ).toBe( 503 );
 		await expect( response.json() ).resolves.toMatchObject( { error: /capacity/ } );
+	} );
+
+	it( 'says when the day’s copies are spent', async () => {
+		refusals = [
+			Object.assign( new Error( 'spent' ), { code: 'static_site_import_preview_daily_limit' } ),
+		];
+		const response = await create( { url: 'mysite.com', consent: true } );
+		expect( response.status ).toBe( 503 );
+		await expect( response.json() ).resolves.toMatchObject( { error: /tomorrow/ } );
 	} );
 
 	it( 'frees the slot an older finished capture is holding, rather than refusing', async () => {
@@ -127,12 +142,22 @@ describe( 'POST /api/jobs', () => {
 		session = { session_id: ID, state: 'preview_ready' };
 		await create( { url: 'mysite.com', consent: true } );
 
-		refuse = Object.assign( new Error( 'full' ), {
-			code: 'static_site_import_session_limit_exceeded',
-		} );
+		refusals = [ full() ];
 		const response = await create( { url: 'other.com', consent: true } );
 
 		expect( response.status ).toBe( 201 );
+		expect( revoked ).toEqual( [ ID ] );
+	} );
+
+	it( 'says the slots are full when the freed one is taken before it can be used', async () => {
+		session = { session_id: ID, state: 'preview_ready' };
+		await create( { url: 'mysite.com', consent: true } );
+
+		refusals = [ full(), full() ];
+		const response = await create( { url: 'other.com', consent: true } );
+
+		expect( response.status ).toBe( 503 );
+		await expect( response.json() ).resolves.toMatchObject( { error: /in a few minutes/ } );
 		expect( revoked ).toEqual( [ ID ] );
 	} );
 
@@ -140,12 +165,11 @@ describe( 'POST /api/jobs', () => {
 		session = { session_id: ID, state: 'capturing' };
 		await create( { url: 'mysite.com', consent: true } );
 
-		refuse = Object.assign( new Error( 'full' ), {
-			code: 'static_site_import_session_limit_exceeded',
-		} );
+		refusals = [ full() ];
 		const response = await create( { url: 'other.com', consent: true } );
 
 		expect( response.status ).toBe( 503 );
+		await expect( response.json() ).resolves.toMatchObject( { error: /in a few minutes/ } );
 		expect( revoked ).toEqual( [] );
 	} );
 } );

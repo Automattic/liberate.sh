@@ -162,7 +162,8 @@ describe( 'previewClient', () => {
 
 describe( 'asUserError', () => {
 	it.each( [
-		[ 'static_site_import_preview_daily_limit', 429, /capacity/ ],
+		[ 'static_site_import_session_limit_exceeded', 429, /in a few minutes/ ],
+		[ 'static_site_import_preview_daily_limit', 429, /tomorrow/ ],
 		[ 'static_site_import_preview_busy', 429, /capacity/ ],
 		[ 'invalid_static_site_source_url', 422, /public https/ ],
 	] )( 'turns %s into something a visitor can read', async ( code, status, message ) => {

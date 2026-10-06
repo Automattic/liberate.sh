@@ -44,7 +44,7 @@ export async function POST( request: Request, context: Context ) {
 				return await client.create( url.href );
 			} catch ( error ) {
 				if ( ! isSessionLimit( error ) ) {
-					throw asUserError( error );
+					throw error;
 				}
 				for ( const record of await store.list() ) {
 					const session = await client.status( record.id ).catch( () => undefined );
@@ -53,10 +53,13 @@ export async function POST( request: Request, context: Context ) {
 						return client.create( url.href );
 					}
 				}
-				throw asUserError( error );
+				throw error;
 			}
 		};
-		const session = await start();
+		// The second try can be refused too, and the visitor should hear why either way.
+		const session = await start().catch( ( error ) => {
+			throw asUserError( error );
+		} );
 
 		const now = Date.now();
 		const record = {

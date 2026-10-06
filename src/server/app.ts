@@ -117,15 +117,21 @@ export async function createApp( {
 				const siteName = await fetchTitle( url.href, checkHost )
 					.then( siteNameFrom )
 					.catch( () => undefined );
-				const session = await client.create( url.href ).catch( async ( error ) => {
-					// A ready capture holds one of the app's three slots until it is let go, so
-					// the oldest finished one makes way rather than turning visitors away.
-					if ( isSessionLimit( error ) && ( await releaseOldest() ) ) {
-						return client.create( url.href );
-					}
-					log( 'create_failed', { host: url.hostname, error: String( error ) } );
-					throw asUserError( error );
-				} );
+				const session = await client
+					.create( url.href )
+					.catch( async ( error ) => {
+						// A ready capture holds one of the app's three slots until it is let go, so
+						// the oldest finished one makes way rather than turning visitors away.
+						if ( isSessionLimit( error ) && ( await releaseOldest() ) ) {
+							return client.create( url.href );
+						}
+						throw error;
+					} )
+					// The second try can be refused too, and the visitor should hear why either way.
+					.catch( ( error ) => {
+						log( 'create_failed', { host: url.hostname, error: String( error ) } );
+						throw asUserError( error );
+					} );
 
 				const now = Date.now();
 				const record = {
