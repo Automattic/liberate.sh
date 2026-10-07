@@ -1,6 +1,7 @@
 // Types and helpers shared by the server and the browser bundle.
 
-export type JobStatus = 'running' | 'done' | 'failed';
+/** `cleared` is a finished copy that was let go to make room for others. */
+export type JobStatus = 'running' | 'done' | 'failed' | 'cleared';
 
 export const STEPS = [ 'scan', 'capture', 'import', 'package' ] as const;
 export type Step = ( typeof STEPS )[ number ];

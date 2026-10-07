@@ -23,6 +23,15 @@ const TABLE = `CREATE TABLE IF NOT EXISTS jobs (
 	expiresAt BIGINT NOT NULL
 )`;
 
+/** Jobs whose archive has been fetched, kept apart so the jobs table never needs altering. */
+const DOWNLOADS = `CREATE TABLE IF NOT EXISTS downloads (
+	id VARCHAR(32) NOT NULL PRIMARY KEY
+)`;
+
+const SELECT =
+	'SELECT jobs.*, downloads.id IS NOT NULL AS downloaded FROM jobs' +
+	' LEFT JOIN downloads ON downloads.id = jobs.id';
+
 /** `all()` is a D1 shape; the rows may arrive bare or wrapped. */
 const rowsOf = ( result: unknown ): Record< string, unknown >[] => {
 	const rows = Array.isArray( result )
@@ -41,13 +50,14 @@ const asRecord = ( row: Record< string, unknown > | undefined ): JobRecord | und
 				bytes: row.bytes === null || row.bytes === undefined ? undefined : Number( row.bytes ),
 				createdAt: Number( row.createdAt ),
 				expiresAt: Number( row.expiresAt ),
+				downloaded: Number( row.downloaded ) ? true : undefined,
 		  }
 		: undefined;
 
 /** The same few hundred bytes per job as the file store, in the space's database. */
 export function databaseStore( db: Database ): JobStore {
 	// A cold worker may be the first to touch it, and it is a no-op once the table is there.
-	const ready = db.prepare( TABLE ).run();
+	const ready = Promise.all( [ db.prepare( TABLE ).run(), db.prepare( DOWNLOADS ).run() ] );
 
 	return {
 		async put( record ) {
@@ -72,7 +82,7 @@ export function databaseStore( db: Database ): JobStore {
 		async get( id ) {
 			await ready;
 			const row = ( await db
-				.prepare( 'SELECT * FROM jobs WHERE id = ? AND expiresAt > ?' )
+				.prepare( `${ SELECT } WHERE jobs.id = ? AND jobs.expiresAt > ?` )
 				.bind( id, Date.now() )
 				.first() ) as Record< string, unknown > | undefined;
 			return asRecord( row ?? undefined );
@@ -82,11 +92,16 @@ export function databaseStore( db: Database ): JobStore {
 			await ready;
 			const rows = rowsOf(
 				await db
-					.prepare( 'SELECT * FROM jobs WHERE expiresAt > ? ORDER BY createdAt ASC LIMIT 100' )
+					.prepare( `${ SELECT } WHERE jobs.expiresAt > ? ORDER BY jobs.createdAt ASC LIMIT 100` )
 					.bind( Date.now() )
 					.all()
 			);
 			return rows.map( ( row ) => asRecord( row )! );
+		},
+
+		async markDownloaded( id ) {
+			await ready;
+			await db.prepare( 'INSERT IGNORE INTO downloads (id) VALUES (?)' ).bind( id ).run();
 		},
 
 		async prune( now = Date.now() ) {
@@ -96,6 +111,7 @@ export function databaseStore( db: Database ): JobStore {
 			);
 			if ( rows.length ) {
 				await db.prepare( 'DELETE FROM jobs WHERE expiresAt <= ?' ).bind( now ).run();
+				await db.prepare( 'DELETE FROM downloads WHERE id NOT IN (SELECT id FROM jobs)' ).run();
 			}
 			return rows.map( ( row ) => String( row.id ) );
 		},

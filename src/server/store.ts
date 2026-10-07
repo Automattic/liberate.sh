@@ -14,6 +14,8 @@ export interface JobRecord {
 	siteName?: string;
 	/** Size of the archive, once a ready session has been asked for it. */
 	bytes?: number;
+	/** The archive has been fetched, so this copy is the first to make way for a new one. */
+	downloaded?: boolean;
 	createdAt: number;
 	expiresAt: number;
 }
@@ -23,6 +25,8 @@ export interface JobStore {
 	get( id: string ): Promise< JobRecord | undefined >;
 	/** Live records, oldest first. */
 	list(): Promise< JobRecord[] >;
+	/** Note that a job's archive has been fetched. */
+	markDownloaded( id: string ): Promise< void >;
 	/** Forget records past their expiry; returns the ids that went. */
 	prune( now?: number ): Promise< string[] >;
 }
@@ -36,7 +40,7 @@ export function fileStore( dir: string ): JobStore {
 	const file = ( id: string ) => path.join( dir, `${ id }.json` );
 	const ready = fs.mkdir( dir, { recursive: true } );
 
-	return {
+	const store: JobStore = {
 		async put( record ) {
 			await ready;
 			const temp = `${ file( record.id ) }.${ randomBytes( 4 ).toString( 'hex' ) }.tmp`;
@@ -45,6 +49,8 @@ export function fileStore( dir: string ): JobStore {
 		},
 
 		async get( id ) {
+			// Waited on here too, or a store that is only ever read leaves the mkdir unwatched.
+			await ready;
 			const record = await fs
 				.readFile( file( id ), 'utf8' )
 				.then( ( contents ) => JSON.parse( contents ) as JobRecord )
@@ -76,6 +82,13 @@ export function fileStore( dir: string ): JobStore {
 				.sort( ( a, b ) => a!.createdAt - b!.createdAt ) as JobRecord[];
 		},
 
+		async markDownloaded( id ) {
+			const record = await store.get( id );
+			if ( record && ! record.downloaded ) {
+				await store.put( { ...record, downloaded: true } );
+			}
+		},
+
 		async prune( now = Date.now() ) {
 			await ready;
 			const names = await fs.readdir( dir ).catch( () => [] );
@@ -93,4 +106,5 @@ export function fileStore( dir: string ): JobStore {
 			return gone;
 		},
 	};
+	return store;
 }

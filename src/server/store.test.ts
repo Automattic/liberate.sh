@@ -46,6 +46,14 @@ describe( 'fileStore', () => {
 		await expect( fileStore( dir ).get( 'nobody' ) ).resolves.toBeUndefined();
 	} );
 
+	it( 'remembers that a record’s archive was fetched', async () => {
+		const store = fileStore( dir );
+		await store.put( record( 'live', Date.now() + 60_000 ) );
+		await store.markDownloaded( 'live' );
+		await expect( store.get( 'live' ) ).resolves.toMatchObject( { downloaded: true } );
+		await expect( store.markDownloaded( 'nobody' ) ).resolves.toBeUndefined();
+	} );
+
 	it( 'prunes what has expired and leaves the rest', async () => {
 		const store = fileStore( dir );
 		await store.put( record( 'live', Date.now() + 60_000 ) );

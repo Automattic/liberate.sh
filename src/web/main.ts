@@ -267,19 +267,24 @@ function loadTurnstile() {
 }
 
 function watchJob( id: string ) {
-	let phase: 'working' | 'done' | 'failed' | undefined;
+	let phase: 'working' | 'done' | 'failed' | 'cleared' | undefined;
 	let timer: number | undefined;
 	let stopped = false;
 
 	const render = ( job: JobView ) => {
-		const next = job.status === 'done' || job.status === 'failed' ? job.status : 'working';
+		const next = job.status === 'running' ? 'working' : job.status;
 		if ( next !== phase ) {
 			phase = next;
-			stage.innerHTML = { working, done, failed }[ next ]( job );
+			stage.innerHTML = { working, done, failed, cleared }[ next ]( job );
 			if ( next === 'done' ) {
 				wireCopyPrompt( job );
 			}
-			const titles = { working: 'Liberating', done: 'Free', failed: 'Couldn’t free' };
+			const titles = {
+				working: 'Liberating',
+				done: 'Free',
+				failed: 'Couldn’t free',
+				cleared: 'Cleared',
+			};
 			document.title = `${ titles[ next ] }: ${ siteLabel( job ) } · liberate.sh`;
 		}
 		if ( next === 'working' ) {
@@ -443,6 +448,13 @@ const failed = ( job: JobView ) => `
 	<p class="status">${ escape( job.error ?? 'Something went wrong.' ) }</p>
 	<div class="actions">
 		<a class="button primary" href="/?url=${ encodeURIComponent( job.url ) }">Try again</a>
+	</div>`;
+
+const cleared = ( job: JobView ) => `
+	<h1 class="headline">This copy<br>is gone.</h1>
+	<p class="status">It was cleared to make room for other copies. Start it again to get a fresh one.</p>
+	<div class="actions">
+		<a class="button primary" href="/?url=${ encodeURIComponent( job.url ) }">Liberate it again</a>
 	</div>`;
 
 const missing = () => `

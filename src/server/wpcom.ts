@@ -82,6 +82,13 @@ class ApiError extends Error {
 export const isSessionLimit = ( error: unknown ) =>
 	( error as { code?: string } )?.code === SESSION_LIMIT_CODE;
 
+/**
+ * Which finished copies to let go first when a slot is needed: one that has been downloaded
+ * costs nobody anything, so those go first, and otherwise the oldest.
+ */
+export const releaseOrder = ( records: JobRecord[] ) =>
+	[ ...records ].sort( ( a, b ) => Number( !! b.downloaded ) - Number( !! a.downloaded ) );
+
 /** Turn an API refusal into what the visitor should be told. */
 export function asUserError( error: unknown ) {
 	// Read the shape rather than the class: an API refusal can reach here from anywhere.
@@ -257,12 +264,46 @@ export function progressFrom( session: Session ) {
 	}
 }
 
+const TOO_BIG =
+	'This site was too big to copy in one go: the copy ran out of memory partway through. Trying again sometimes works, but very large sites often stop at the same point.';
+const PACKING_FAILED =
+	'Your site was copied, but something went wrong on our side while packing it up. Trying again usually works.';
+
+/** Why a capture failed, by the code on its receipt, in words the visitor can act on. */
+const FAILURES: Record< string, string > = {
+	capture_deadline_exceeded:
+		'This site took too long to copy. The copy stops after about an hour, and this one hadn’t finished, usually because the site is very large or slow to load. Trying again sometimes gets through.',
+	static_site_capture_runner_killed: TOO_BIG,
+	static_site_capture_runner_aborted: TOO_BIG,
+	static_site_capture_capture_failed:
+		'We couldn’t load this site to copy it. Check that the address opens in your browser. Some sites also block automated visits.',
+	static_site_capture_archive_failed: PACKING_FAILED,
+	static_site_capture_export_failed: PACKING_FAILED,
+	static_site_capture_build_failed:
+		'Your site was copied, but rebuilding it as WordPress failed. Trying again may work.',
+};
+const UNKNOWN_FAILURE = 'We couldn’t copy this site. Please try again.';
+
+/** This app let a finished copy go, to make room for another. */
+const REVOKED = 'static_site_import_preview_revoked';
+
+/** A finished copy WordPress.com let go after its three days, the same as a link of ours expiring. */
+export const hasExpired = ( session: Session ) =>
+	session.state === 'failed' && session.receipt?.code === 'static_site_import_preview_expired';
+
 /** What the page shows: this app's record of the site, and WordPress.com's of the copy. */
 export function viewFrom( record: JobRecord, session: Session ): JobView {
 	const summary = session.preview_summary ?? {};
 	const progress = progressFrom( session );
+	const code = session.receipt?.code;
 	const status =
-		session.state === 'preview_ready' ? 'done' : session.state === 'failed' ? 'failed' : 'running';
+		session.state === 'preview_ready'
+			? 'done'
+			: session.state !== 'failed'
+			? 'running'
+			: code === REVOKED
+			? 'cleared'
+			: 'failed';
 	const pages = summary.pages ?? progress.counts?.pages;
 
 	return {
@@ -271,7 +312,7 @@ export function viewFrom( record: JobRecord, session: Session ): JobView {
 		host: record.host,
 		siteName: record.siteName,
 		status,
-		progress: status === 'done' ? 1 : status === 'failed' ? 0 : progress.progress,
+		progress: status === 'done' ? 1 : status === 'running' ? progress.progress : 0,
 		step: status === 'running' ? progress.step : undefined,
 		detail: status === 'running' ? progress.detail : undefined,
 		counts: pages ? { pages } : undefined,
@@ -280,7 +321,12 @@ export function viewFrom( record: JobRecord, session: Session ): JobView {
 				? QUALITY_WARNING
 				: undefined,
 		bytes: record.bytes,
-		error: status === 'failed' ? UNUSABLE_SOURCE : undefined,
+		error:
+			status !== 'failed'
+				? undefined
+				: code && Object.hasOwn( FAILURES, code )
+				? FAILURES[ code ]
+				: UNKNOWN_FAILURE,
 		createdAt: record.createdAt,
 		expiresAt: record.expiresAt,
 	};

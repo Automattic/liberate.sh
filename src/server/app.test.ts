@@ -10,6 +10,7 @@ import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
 const ID = 'a'.repeat( 32 );
+const OTHER = 'c'.repeat( 32 );
 
 let dir: string;
 let server: Server;
@@ -161,6 +162,25 @@ describe( 'POST /api/jobs', () => {
 		expect( revoked ).toEqual( [ ID ] );
 	} );
 
+	it( 'lets a copy that has been downloaded go before an older one nobody has fetched', async () => {
+		const ready = ( id: string ): Session => ( {
+			session_id: id,
+			state: 'preview_ready',
+			archive_url: 'https://archives.example.com/site.zip',
+		} );
+		session = ready( ID );
+		await create( { url: 'mysite.com', consent: true } );
+		session = ready( OTHER );
+		await create( { url: 'other.com', consent: true } );
+		await fetch( `${ base }/api/jobs/${ OTHER }/files/site`, { redirect: 'manual' } );
+
+		refusals = [ full() ];
+		const response = await create( { url: 'third.com', consent: true } );
+
+		expect( response.status ).toBe( 201 );
+		expect( revoked ).toEqual( [ OTHER ] );
+	} );
+
 	it( 'still refuses when every slot is held by a capture that is running', async () => {
 		session = { session_id: ID, state: 'capturing' };
 		await create( { url: 'mysite.com', consent: true } );
@@ -195,6 +215,17 @@ describe( 'GET /api/jobs/:id', () => {
 			bytes: 1024,
 			warning: expect.stringContaining( 'didn’t convert cleanly' ),
 		} );
+	} );
+
+	it( 'answers 404 once WordPress.com has let the copy expire', async () => {
+		await create( { url: 'mysite.com', consent: true } );
+		session = {
+			session_id: ID,
+			state: 'failed',
+			receipt: { code: 'static_site_import_preview_expired' },
+		};
+		const response = await fetch( `${ base }/api/jobs/${ ID }` );
+		expect( response.status ).toBe( 404 );
 	} );
 
 	it.each( [

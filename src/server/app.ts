@@ -8,7 +8,9 @@ import { parseSiteUrl, UserError, verifyTurnstile } from './guards.ts';
 import {
 	asUserError,
 	fetchTitle,
+	hasExpired,
 	isSessionLimit,
+	releaseOrder,
 	siteNameFrom,
 	viewFrom,
 	type PreviewClient,
@@ -121,8 +123,8 @@ export async function createApp( {
 					.create( url.href )
 					.catch( async ( error ) => {
 						// A ready capture holds one of the app's five slots until it is let go, so
-						// the oldest finished one makes way rather than turning visitors away.
-						if ( isSessionLimit( error ) && ( await releaseOldest() ) ) {
+						// a finished one makes way rather than turning visitors away.
+						if ( isSessionLimit( error ) && ( await releaseSlot() ) ) {
 							return client.create( url.href );
 						}
 						throw error;
@@ -151,9 +153,9 @@ export async function createApp( {
 		}
 	);
 
-	/** Give back the slot held by the oldest capture that has already finished. */
-	const releaseOldest = async () => {
-		for ( const record of await store.list() ) {
+	/** Give back a slot held by a finished capture, a downloaded one if there is one. */
+	const releaseSlot = async () => {
+		for ( const record of releaseOrder( await store.list() ) ) {
 			const session = await client.status( record.id ).catch( () => undefined );
 			if ( session?.state === 'preview_ready' ) {
 				await client.revoke( record.id ).catch( () => undefined );
@@ -170,12 +172,13 @@ export async function createApp( {
 		if ( ! record ) {
 			throw new UserError( 'This link has expired or never existed.', 404 );
 		}
-		return {
-			record,
-			session: await client.status( id ).catch( ( error ) => {
-				throw asUserError( error );
-			} ),
-		};
+		const session = await client.status( id ).catch( ( error ) => {
+			throw asUserError( error );
+		} );
+		if ( hasExpired( session ) ) {
+			throw new UserError( 'This link has expired or never existed.', 404 );
+		}
+		return { record, session };
 	};
 
 	api.get( '/jobs/:id', async ( req, res, next ) => {
@@ -201,6 +204,8 @@ export async function createApp( {
 				throw new UserError( 'This file isn’t available.', 404 );
 			}
 			log( 'download', { id: record.id } );
+			// Worth knowing when a slot is needed, never worth failing the download over.
+			await store.markDownloaded( record.id ).catch( () => undefined );
 			// Signed and short-lived, which is why it is read fresh on every click.
 			res.redirect( 302, session.archive_url );
 		} catch ( error ) {

@@ -4,6 +4,7 @@ import {
 	asUserError,
 	fetchTitle,
 	isSessionLimit,
+	releaseOrder,
 	siteNameFrom,
 	viewFrom,
 } from '../../src/server/wpcom.ts';
@@ -38,8 +39,8 @@ export async function POST( request: Request, context: Context ) {
 				.then( siteNameFrom )
 				.catch( () => undefined );
 
-			// A ready capture holds one of the app's five slots until it is let go, so the
-			// oldest finished one makes way rather than turning visitors away.
+			// A ready capture holds one of the app's five slots until it is let go, so a
+			// finished one makes way rather than turning visitors away, a downloaded one first.
 			const start = async () => {
 				try {
 					return await client.create( url.href );
@@ -47,7 +48,7 @@ export async function POST( request: Request, context: Context ) {
 					if ( ! isSessionLimit( error ) ) {
 						throw error;
 					}
-					for ( const record of await store.list() ) {
+					for ( const record of releaseOrder( await store.list() ) ) {
 						const session = await client.status( record.id ).catch( () => undefined );
 						if ( session?.state === 'preview_ready' ) {
 							await client.revoke( record.id ).catch( () => undefined );

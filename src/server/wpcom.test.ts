@@ -3,8 +3,10 @@ import { UserError } from './guards.ts';
 import {
 	asUserError,
 	fetchTitle,
+	hasExpired,
 	previewClient,
 	progressFrom,
+	releaseOrder,
 	siteNameFrom,
 	viewFrom,
 } from './wpcom.ts';
@@ -91,6 +93,35 @@ describe( 'viewFrom', () => {
 		} );
 	} );
 
+	it.each( [
+		[ 'capture_deadline_exceeded', /took too long to copy/ ],
+		[ 'static_site_capture_runner_killed', /too big to copy/ ],
+		[ 'static_site_capture_runner_aborted', /too big to copy/ ],
+		[ 'static_site_capture_capture_failed', /couldn’t load this site/ ],
+		[ 'static_site_capture_archive_failed', /on our side/ ],
+		[ 'static_site_capture_export_failed', /on our side/ ],
+		[ 'static_site_capture_build_failed', /rebuilding it as WordPress failed/ ],
+		[ 'something_new', /^We couldn’t copy this site\. Please try again\.$/ ],
+		[ 'constructor', /^We couldn’t copy this site\. Please try again\.$/ ],
+	] )( 'says why a capture failed with %s', ( code, message ) => {
+		const view = viewFrom( RECORD, {
+			session_id: RECORD.id,
+			state: 'failed',
+			receipt: { code },
+		} );
+		expect( view ).toMatchObject( { status: 'failed', error: expect.stringMatching( message ) } );
+	} );
+
+	it( 'tells a copy this app let go apart from a failure', () => {
+		const view = viewFrom( RECORD, {
+			session_id: RECORD.id,
+			state: 'failed',
+			receipt: { code: 'static_site_import_preview_revoked' },
+		} );
+		expect( view ).toMatchObject( { status: 'cleared', progress: 0 } );
+		expect( view.error ).toBeUndefined();
+	} );
+
 	it( 'carries this app’s own record, which the session does not have', () => {
 		const view = viewFrom(
 			{ ...RECORD, bytes: 2048 },
@@ -103,6 +134,29 @@ describe( 'viewFrom', () => {
 			bytes: 2048,
 			status: 'running',
 		} );
+	} );
+} );
+
+describe( 'hasExpired', () => {
+	it( 'knows a copy WordPress.com let go after its three days', () => {
+		const expired = { code: 'static_site_import_preview_expired' };
+		expect( hasExpired( { session_id: 'x', state: 'failed', receipt: expired } ) ).toBe( true );
+		expect( hasExpired( { session_id: 'x', state: 'failed' } ) ).toBe( false );
+	} );
+} );
+
+describe( 'releaseOrder', () => {
+	it( 'lets a downloaded copy go first, and otherwise the oldest', () => {
+		const records = [
+			{ ...RECORD, id: 'oldest' },
+			{ ...RECORD, id: 'fetched', downloaded: true },
+			{ ...RECORD, id: 'newest' },
+		];
+		expect( releaseOrder( records ).map( ( record ) => record.id ) ).toEqual( [
+			'fetched',
+			'oldest',
+			'newest',
+		] );
 	} );
 } );
 
