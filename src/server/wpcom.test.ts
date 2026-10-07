@@ -190,6 +190,32 @@ describe( 'asUserError', () => {
 		expect( ( error as UserError ).message ).toMatch( message );
 	} );
 
+	it( 'says when the day’s copies come back, when WordPress.com says', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn( async ( input: string ) =>
+				String( input ).endsWith( '/oauth2/token' )
+					? json( { access_token: 'token' } )
+					: json(
+							{
+								code: 'static_site_import_preview_daily_limit',
+								message: 'no',
+								data: { limit: 50, remaining: 0, retry_after: 4 * 3600 + 60 },
+							},
+							429
+					  )
+			)
+		);
+		const config = {
+			...loadConfig( { WPCOM_CLIENT_ID: '1', WPCOM_CLIENT_SECRET: 's' } ),
+			apiBase: 'https://api.test',
+		};
+		const error = await previewClient( config )
+			.create( 'https://mysite.com/' )
+			.catch( ( thrown ) => asUserError( thrown ) );
+		expect( ( error as UserError ).message ).toMatch( /try again in about 5 hours\.$/ );
+	} );
+
 	it( 'leaves anything else alone', () => {
 		const error = new Error( 'socket hang up' );
 		expect( asUserError( error ) ).toBe( error );

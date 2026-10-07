@@ -50,19 +50,31 @@ const BUSY = 'liberate.sh is at capacity right now. Please try again later.';
 /** Every capture slot is taken, and one frees up as soon as a capture finishes. */
 const SLOTS_FULL =
 	'liberate.sh is already copying as many sites as it can at once. Please try again in a few minutes.';
-const DAILY_LIMIT =
-	'liberate.sh has copied all the sites it can for today. Please try again tomorrow.';
 const QUALITY_WARNING =
 	'Parts of this site didn’t convert cleanly, so some pages may be missing pieces.';
+
+/** The day's copies come back at midnight UTC, and WordPress.com says how far off that is. */
+const dailyLimit = ( retryAfterSeconds: unknown ) => {
+	const hours = Math.ceil( Number( retryAfterSeconds ) / 3600 );
+	const when = ! ( hours > 0 )
+		? 'tomorrow'
+		: hours === 1
+		? 'in an hour'
+		: `in about ${ hours } hours`;
+	return `liberate.sh has copied all the sites it can for today. Please try again ${ when }.`;
+};
 
 class ApiError extends Error {
 	code: string;
 	status: number;
+	/** Whatever the refusal carries besides its code, such as when a limit lifts. */
+	data?: Record< string, unknown >;
 
-	constructor( code: string, status: number, message: string ) {
+	constructor( code: string, status: number, message: string, data?: Record< string, unknown > ) {
 		super( message );
 		this.code = code;
 		this.status = status;
+		this.data = data;
 	}
 }
 
@@ -73,7 +85,11 @@ export const isSessionLimit = ( error: unknown ) =>
 /** Turn an API refusal into what the visitor should be told. */
 export function asUserError( error: unknown ) {
 	// Read the shape rather than the class: an API refusal can reach here from anywhere.
-	const { code, status } = ( error ?? {} ) as { code?: string; status?: number };
+	const { code, status, data } = ( error ?? {} ) as {
+		code?: string;
+		status?: number;
+		data?: { retry_after?: unknown };
+	};
 	if ( typeof code !== 'string' ) {
 		return error;
 	}
@@ -84,7 +100,7 @@ export function asUserError( error: unknown ) {
 		return new UserError( SLOTS_FULL, 503 );
 	}
 	if ( code === DAILY_LIMIT_CODE ) {
-		return new UserError( DAILY_LIMIT, 503 );
+		return new UserError( dailyLimit( data?.retry_after ), 503 );
 	}
 	return BUSY_CODES.has( code ) || status === 429 ? new UserError( BUSY, 503 ) : error;
 }
@@ -145,7 +161,8 @@ export function previewClient( config: Config ): PreviewClient {
 			throw new ApiError(
 				String( json.code ?? `http_${ response.status }` ),
 				response.status,
-				String( json.message ?? response.statusText )
+				String( json.message ?? response.statusText ),
+				json.data as Record< string, unknown > | undefined
 			);
 		}
 		return json as unknown as Session;

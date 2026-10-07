@@ -32,10 +32,24 @@ async function fingerprint( value: string ) {
 /**
  * Count this visitor's starts for the hour and refuse past the limit. The daily budget
  * belongs to everyone, so one visitor cannot spend it alone.
+ *
+ * A start is counted while it is under way, so a burst can't slip past, and the returned
+ * function gives it back if it doesn't go through: like the Express server, only the
+ * captures that actually start count against the visitor.
  */
 export async function countStart( db: Database, request: Request, perHour: number ) {
 	const visitor = await fingerprint( visitorOf( request ) );
 	const hour = Math.floor( Date.now() / 3_600_000 );
+	// Best effort: a lost refund costs the visitor one start, not the error they should see.
+	const refund = () =>
+		db
+			.prepare( 'UPDATE hits SET count = count - 1 WHERE visitor = ? AND hour = ? AND count > 0' )
+			.bind( visitor, hour )
+			.run()
+			.then(
+				() => undefined,
+				() => undefined
+			);
 
 	await db.prepare( TABLE ).run();
 	await db
@@ -57,9 +71,11 @@ export async function countStart( db: Database, request: Request, perHour: numbe
 		.first() ) as { count?: number } | undefined;
 
 	if ( Number( row?.count ?? 0 ) > perHour ) {
+		await refund();
 		throw new UserError(
 			'You’ve liberated several sites already. Please try again in an hour.',
 			429
 		);
 	}
+	return refund;
 }

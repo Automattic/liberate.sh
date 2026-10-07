@@ -12,6 +12,7 @@ import {
 	type Step,
 } from '../shared.ts';
 import { setupPrompt } from './prompt.ts';
+import { refusalFor } from './refusal.ts';
 
 declare global {
 	interface Window {
@@ -234,7 +235,7 @@ function showForm( prefill: string ) {
 			} );
 			const body = await response.json().catch( () => ( {} ) );
 			if ( ! response.ok ) {
-				throw new Error( body.error ?? 'Something went wrong. Please try again.' );
+				throw new Error( body.error ?? refusalFor( response.status ) );
 			}
 			window.history.pushState( null, '', `/j/${ body.id }` );
 			route();

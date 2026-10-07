@@ -120,7 +120,7 @@ export async function createApp( {
 				const session = await client
 					.create( url.href )
 					.catch( async ( error ) => {
-						// A ready capture holds one of the app's three slots until it is let go, so
+						// A ready capture holds one of the app's five slots until it is let go, so
 						// the oldest finished one makes way rather than turning visitors away.
 						if ( isSessionLimit( error ) && ( await releaseOldest() ) ) {
 							return client.create( url.href );

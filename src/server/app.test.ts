@@ -138,7 +138,7 @@ describe( 'POST /api/jobs', () => {
 	} );
 
 	it( 'frees the slot an older finished capture is holding, rather than refusing', async () => {
-		// A capture that is already done, holding one of the app's three slots.
+		// A capture that is already done, holding one of the app's five slots.
 		session = { session_id: ID, state: 'preview_ready' };
 		await create( { url: 'mysite.com', consent: true } );
 
