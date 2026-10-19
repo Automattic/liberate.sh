@@ -76,6 +76,37 @@ describe( 'viewFrom', () => {
 		expect( view.step ).toBeUndefined();
 	} );
 
+	it( 'offers WordPress.com onboarding for a ready copy WordPress.com shared', () => {
+		const blueprint =
+			'https://public-api.wordpress.com/wpcom/v2/static-site-import-session/share/abc.def/blueprint';
+		const view = viewFrom( RECORD, {
+			session_id: RECORD.id,
+			state: 'preview_ready',
+			share_blueprint_url: blueprint,
+		} );
+		expect( view.launchUrl ).toBe(
+			`https://wordpress.com/setup/onboarding/playground?blueprint-url=${ encodeURIComponent(
+				blueprint
+			) }`
+		);
+	} );
+
+	it( 'offers no launch without a WordPress.com blueprint', () => {
+		const ready = { session_id: RECORD.id, state: 'preview_ready' };
+		expect( viewFrom( RECORD, ready ).launchUrl ).toBeUndefined();
+		expect(
+			viewFrom( RECORD, { ...ready, share_blueprint_url: 'https://example.com/blueprint' } )
+				.launchUrl
+		).toBeUndefined();
+		expect(
+			viewFrom( RECORD, {
+				session_id: RECORD.id,
+				state: 'building',
+				share_blueprint_url: 'https://public-api.wordpress.com/x/blueprint',
+			} ).launchUrl
+		).toBeUndefined();
+	} );
+
 	it( 'says nothing about quality when the importer was happy', () => {
 		const view = viewFrom( RECORD, {
 			session_id: RECORD.id,
