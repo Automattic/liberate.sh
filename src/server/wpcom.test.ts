@@ -84,11 +84,15 @@ describe( 'viewFrom', () => {
 			state: 'preview_ready',
 			share_blueprint_url: blueprint,
 		} );
-		expect( view.launchUrl ).toBe(
-			`https://wordpress.com/setup/onboarding/playground?blueprint-url=${ encodeURIComponent(
-				blueprint
-			) }`
+		const launch = new URL( view.launchUrl ?? '' );
+		expect( launch.origin + launch.pathname ).toBe(
+			'https://wordpress.com/setup/onboarding/playground'
 		);
+		expect( Object.fromEntries( launch.searchParams ) ).toEqual( {
+			'blueprint-url': blueprint,
+			ref: 'liberate-sh',
+			source: 'liberate-sh',
+		} );
 	} );
 
 	it( 'offers no launch without a WordPress.com blueprint', () => {

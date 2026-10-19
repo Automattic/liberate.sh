@@ -296,6 +296,9 @@ export const hasExpired = ( session: Session ) =>
 /** WordPress.com's onboarding boots a blueprint and launches it as a site on a plan. */
 const ONBOARDING = 'https://wordpress.com/setup/onboarding/playground';
 
+/** How WordPress.com's signup and purchase reports name a visitor this app sent. */
+const REFERRER = 'liberate-sh';
+
 /** Where "Put it on WordPress.com" goes, when the copy carries a blueprint WordPress.com signed. */
 export function launchUrl( session: Session ) {
 	const blueprint = session.share_blueprint_url;
@@ -310,7 +313,13 @@ export function launchUrl( session: Session ) {
 	} catch {
 		return undefined;
 	}
-	return `${ ONBOARDING }?blueprint-url=${ encodeURIComponent( blueprint ) }`;
+	// `ref` attributes the signup and `source` the purchase, so both reports can name this app.
+	const query = new URLSearchParams( {
+		'blueprint-url': blueprint,
+		ref: REFERRER,
+		source: REFERRER,
+	} );
+	return `${ ONBOARDING }?${ query }`;
 }
 
 /** What the page shows: this app's record of the site, and WordPress.com's of the copy. */
