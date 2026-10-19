@@ -29,6 +29,8 @@ export interface JobView {
 	/** Set when the copy finished with known gaps. */
 	warning?: string;
 	error?: string;
+	/** WordPress.com onboarding for this copy: preview it, then launch it on a plan. */
+	launchUrl?: string;
 	/** Size of the download in bytes, once it is known. */
 	bytes?: number;
 	createdAt: number;

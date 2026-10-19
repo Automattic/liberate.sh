@@ -15,6 +15,8 @@ export interface Session {
 	/** Signed, and refreshed on every read, so it is only ever used right away. */
 	archive_url?: string;
 	receipt?: { code?: string };
+	/** A ready copy's public Playground blueprint, signed for as long as the session lives. */
+	share_blueprint_url?: string;
 	/** Bounded evidence about the copy: counts, the importer's own verdict, no source text. */
 	preview_summary?: {
 		pages?: number;
@@ -291,6 +293,26 @@ const REVOKED = 'static_site_import_preview_revoked';
 export const hasExpired = ( session: Session ) =>
 	session.state === 'failed' && session.receipt?.code === 'static_site_import_preview_expired';
 
+/** WordPress.com's onboarding boots a blueprint and launches it as a site on a plan. */
+const ONBOARDING = 'https://wordpress.com/setup/onboarding/playground';
+
+/** Where "Put it on WordPress.com" goes, when the copy carries a blueprint WordPress.com signed. */
+export function launchUrl( session: Session ) {
+	const blueprint = session.share_blueprint_url;
+	if ( session.state !== 'preview_ready' || typeof blueprint !== 'string' ) {
+		return undefined;
+	}
+	try {
+		const url = new URL( blueprint );
+		if ( url.protocol !== 'https:' || ! /(^|\.)wordpress\.com$/.test( url.hostname ) ) {
+			return undefined;
+		}
+	} catch {
+		return undefined;
+	}
+	return `${ ONBOARDING }?blueprint-url=${ encodeURIComponent( blueprint ) }`;
+}
+
 /** What the page shows: this app's record of the site, and WordPress.com's of the copy. */
 export function viewFrom( record: JobRecord, session: Session ): JobView {
 	const summary = session.preview_summary ?? {};
@@ -321,6 +343,7 @@ export function viewFrom( record: JobRecord, session: Session ): JobView {
 				? QUALITY_WARNING
 				: undefined,
 		bytes: record.bytes,
+		launchUrl: status === 'done' ? launchUrl( session ) : undefined,
 		error:
 			status !== 'failed'
 				? undefined

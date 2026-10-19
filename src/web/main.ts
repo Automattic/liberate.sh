@@ -380,7 +380,16 @@ const done = ( job: JobView ) => `
 	<p class="summary">${ summarize( job ) }</p>
 	${ job.warning ? `<p class="note">${ escape( job.warning ) }</p>` : '' }
 	<div class="actions">
-		<a class="button primary" href="/api/jobs/${ job.id }/files/site" download>
+		${
+			job.launchUrl
+				? `<a class="button primary" href="${ escape( job.launchUrl ) }">
+			Put it on WordPress.com <small>preview, then launch</small>
+		</a>`
+				: ''
+		}
+		<a class="button${ job.launchUrl ? '' : ' primary' }" href="/api/jobs/${
+			job.id
+		}/files/site" download>
 			Download your site <small>.zip · ${ megabytes( job.bytes ) }</small>
 		</a>
 		<button type="button" class="button copy-prompt">
