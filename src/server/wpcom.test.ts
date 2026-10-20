@@ -237,6 +237,14 @@ describe( 'previewClient', () => {
 		expect( calls.filter( ( call ) => call.endsWith( '/oauth2/token' ) ) ).toHaveLength( 2 );
 	} );
 
+	it( 'reports a download to the session it belongs to', async () => {
+		const calls = stub( () => json( { session_id: 'a'.repeat( 32 ), outcome: 'downloaded' } ) );
+		await previewClient( config ).downloaded( 'a'.repeat( 32 ) );
+		expect( calls ).toContain(
+			`POST /wpcom/v2/static-site-import-preview/${ 'a'.repeat( 32 ) }/downloads`
+		);
+	} );
+
 	it( 'reads the archive size without downloading it', async () => {
 		stub( () => new Response( null, { headers: { 'content-length': '1048576' } } ) );
 		await expect(
