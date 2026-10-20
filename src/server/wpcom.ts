@@ -36,6 +36,8 @@ export interface PreviewClient {
 	revoke( id: string ): Promise< Session >;
 	/** The archive's size, so the page can say it before a long download. */
 	sizeOf( archiveUrl: string ): Promise< number | undefined >;
+	/** Tell WordPress.com a visitor took the copy: it never sees the signed link followed. */
+	downloaded( id: string ): Promise< void >;
 }
 
 /** Capacity or a passing deploy, not a bad address. */
@@ -181,6 +183,9 @@ export function previewClient( config: Config ): PreviewClient {
 		create: ( url ) => call( 'POST', '', { source_url: url } ),
 		status: ( id ) => call( 'GET', `/${ id }` ),
 		revoke: ( id ) => call( 'DELETE', `/${ id }` ),
+		async downloaded( id ) {
+			await call( 'POST', `/${ id }/downloads` );
+		},
 		async sizeOf( archiveUrl ) {
 			const response = await fetch( archiveUrl, {
 				method: 'HEAD',
@@ -238,6 +243,7 @@ export function fakeClient(): PreviewClient {
 		async sizeOf() {
 			return 42;
 		},
+		async downloaded() {},
 	};
 }
 

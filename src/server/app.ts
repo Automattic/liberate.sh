@@ -204,6 +204,12 @@ export async function createApp( {
 				throw new UserError( 'This file isn’t available.', 404 );
 			}
 			log( 'download', { id: record.id } );
+			// WordPress.com counts a copy's first download; the report never holds this one up.
+			client
+				.downloaded( record.id )
+				.catch( ( error ) =>
+					log( 'download_report_failed', { id: record.id, error: String( error ) } )
+				);
 			// Worth knowing when a slot is needed, never worth failing the download over.
 			await store.markDownloaded( record.id ).catch( () => undefined );
 			// Signed and short-lived, which is why it is read fresh on every click.

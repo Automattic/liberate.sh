@@ -19,6 +19,7 @@ let session: Session;
 /** What the next calls to create are refused with, one each. */
 let refusals: Error[];
 let revoked: string[];
+let downloads: string[];
 
 const client: PreviewClient = {
 	async create() {
@@ -38,12 +39,16 @@ const client: PreviewClient = {
 	async sizeOf() {
 		return 1024;
 	},
+	async downloaded( id ) {
+		downloads.push( id );
+	},
 };
 
 beforeEach( async () => {
 	session = { session_id: ID, state: 'capturing', progress: { pages_captured: 2, pages_total: 8 } };
 	refusals = [];
 	revoked = [];
+	downloads = [];
 	dir = fs.mkdtempSync( path.join( os.tmpdir(), 'liberate-app-' ) );
 	const config = loadConfig( {
 		NODE_ENV: 'production',
@@ -249,11 +254,30 @@ describe( 'GET /api/jobs/:id/files/site', () => {
 		const response = await fetch( `${ base }/api/jobs/${ ID }/files/site`, { redirect: 'manual' } );
 		expect( response.status ).toBe( 302 );
 		expect( response.headers.get( 'location' ) ).toBe( 'https://archives.example.com/site.zip' );
+		expect( downloads ).toEqual( [ ID ] );
+	} );
+
+	it( 'still sends the visitor on when WordPress.com cannot take the report', async () => {
+		await create( { url: 'mysite.com', consent: true } );
+		session = {
+			session_id: ID,
+			state: 'preview_ready',
+			archive_url: 'https://archives.example.com/site.zip',
+		};
+		const report = vi
+			.spyOn( client, 'downloaded' )
+			.mockRejectedValueOnce( new Error( 'unavailable' ) );
+
+		const response = await fetch( `${ base }/api/jobs/${ ID }/files/site`, { redirect: 'manual' } );
+		expect( response.status ).toBe( 302 );
+		expect( report ).toHaveBeenCalledWith( ID );
+		report.mockRestore();
 	} );
 
 	it( 'answers 404 while there is no archive yet', async () => {
 		await create( { url: 'mysite.com', consent: true } );
 		const response = await fetch( `${ base }/api/jobs/${ ID }/files/site`, { redirect: 'manual' } );
 		expect( response.status ).toBe( 404 );
+		expect( downloads ).toEqual( [] );
 	} );
 } );
