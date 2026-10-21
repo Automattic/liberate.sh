@@ -11,6 +11,8 @@ export interface Env extends Record< string, unknown > {
 export interface Context {
 	params: Record< string, string >;
 	env: Env;
+	/** The worker's execution context: work handed to waitUntil outlives the response. */
+	ctx?: { waitUntil( promise: Promise< unknown > ): void };
 }
 
 const RESERVED_SUFFIXES = [ '.localhost', '.local', '.internal', '.test', '.example', '.invalid' ];

@@ -13,9 +13,11 @@ mkdirSync( out, { recursive: true } );
 cpSync( path.join( root, 'dist' ), out, { recursive: true } );
 cpSync( path.join( root, 'sf.jsonc' ), path.join( out, 'sf.jsonc' ) );
 
-// Routes only: anything under `_lib` is a helper, and gets inlined into the routes.
+// Routes only: anything under `_lib` is a helper, and gets inlined into the routes, and
+// a test sits beside the route it checks.
 const routes = globSync( 'functions/**/*.ts', { cwd: root } ).filter(
-	( file ) => ! path.basename( path.dirname( file ) ).startsWith( '_' )
+	( file ) =>
+		! path.basename( path.dirname( file ) ).startsWith( '_' ) && ! file.endsWith( '.test.ts' )
 );
 
 await build( {
