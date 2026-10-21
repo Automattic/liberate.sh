@@ -257,6 +257,22 @@ describe( 'GET /api/jobs/:id/files/site', () => {
 		expect( downloads ).toEqual( [ ID ] );
 	} );
 
+	it( 'reports nothing for a HEAD, which takes no copy', async () => {
+		await create( { url: 'mysite.com', consent: true } );
+		session = {
+			session_id: ID,
+			state: 'preview_ready',
+			archive_url: 'https://archives.example.com/site.zip',
+		};
+
+		const response = await fetch( `${ base }/api/jobs/${ ID }/files/site`, {
+			method: 'HEAD',
+			redirect: 'manual',
+		} );
+		expect( response.status ).toBe( 302 );
+		expect( downloads ).toEqual( [] );
+	} );
+
 	it( 'still sends the visitor on when WordPress.com cannot take the report', async () => {
 		await create( { url: 'mysite.com', consent: true } );
 		session = {
