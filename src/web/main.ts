@@ -162,8 +162,11 @@ function showForm( prefill: string ) {
 			<p class="error" role="alert"></p>
 		</form>
 		<p class="fine">
-			Your pages, images and the look, packed into a WordPress site you own. It’s free, and
-			your files are deleted after ${ retention() }.
+			Turn your Wix, Squarespace, Shopify or Webflow site into a WordPress site you can download
+			and host anywhere. It’s free, and your current site isn’t touched.
+		</p>
+		<p class="fine">
+			We keep your converted copy for ${ retention() } so you can download it, then delete it.
 		</p>`;
 
 	const word = stage.querySelector( '.x' )!;
@@ -428,7 +431,7 @@ const done = ( job: JobView ) => `
 		<p><strong>Somewhere else?</strong> The zip holds your <code>wp-content</code> folder and your
 			site's database, so you can take it to any WordPress host.</p>
 	</details>
-	<p class="fine">Your files are deleted ${ expiry(
+	<p class="fine">Your download is deleted ${ expiry(
 		job.expiresAt
 	) }. <a href="/">Liberate another site</a></p>`;
 
@@ -468,7 +471,7 @@ const cleared = ( job: JobView ) => `
 
 const missing = () => `
 	<h1 class="headline">Nothing here<br>anymore.</h1>
-	<p class="status">Liberated sites are deleted after ${ retention() }, and this one is gone.</p>
+	<p class="status">Converted copies are deleted after ${ retention() }, and this one is gone.</p>
 	<div class="actions"><a class="button primary" href="/">Liberate a site</a></div>`;
 
 async function start() {
