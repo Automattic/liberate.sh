@@ -1,7 +1,7 @@
 import type { JobView } from '../shared.ts';
 
 /**
- * What to paste into an AI agent so it sets the site up in Studio. It names the stable download
+ * What to paste into an AI agent so it sets the site up in WordPress Studio. It names the stable download
  * endpoint, never the signed URL behind it, which expires within minutes.
  */
 export function setupPrompt( job: Pick< JobView, 'id' | 'host' | 'expiresAt' >, origin: string ) {
@@ -16,7 +16,7 @@ export function setupPrompt( job: Pick< JobView, 'id' | 'host' | 'expiresAt' >, 
 The site is a zip: ${ origin }/api/jobs/${ job.id }/files/site
 - That link redirects to a short-lived download, so request it fresh rather than reusing an old redirect.${ until }
 - It holds a wp-content folder, not a full WordPress install: the theme, a plugin, the uploads, and an SQLite database at wp-content/database/.ht.sqlite. There is no SQL dump.
-- Studio's import takes the zip as it is and replaces the new site's files and database with it.
+- WordPress Studio's import takes the zip as it is and replaces the new site's files and database with it.
 
-If Studio isn't installed, tell me how to get it instead of using another local WordPress tool.`;
+If WordPress Studio isn't installed, tell me how to get it instead of using another local WordPress tool.`;
 }

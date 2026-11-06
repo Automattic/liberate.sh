@@ -70,7 +70,7 @@ const MAKERS = [
 		href: 'https://developer.wordpress.com/studio/',
 		logo: 'studio.svg',
 		ratio: 1,
-		label: 'Studio',
+		label: 'WordPress Studio',
 	},
 	{ name: 'Tumblr', href: 'https://www.tumblr.com', logo: 'tumblr.svg', ratio: 73 / 15 },
 	{ name: 'Woo', href: 'https://woocommerce.com', logo: 'woo.svg', ratio: 58 / 15 },
@@ -94,8 +94,13 @@ function startMakers() {
 		return;
 	}
 
-	const widthOf = ( maker: ( typeof MAKERS )[ number ] ) =>
-		`${ ( maker.label ? maker.ratio + 3.6 : maker.ratio ) * 1.07 }em`;
+	// Logos size from their aspect ratio; a text label is measured, so any wording fits.
+	const widthOf = ( maker: ( typeof MAKERS )[ number ], layer: HTMLElement ) => {
+		const label = layer.querySelector< HTMLElement >( '.label' );
+		const em = parseFloat( getComputedStyle( stack ).fontSize );
+		const labelWidth = label ? 0.3 + label.offsetWidth / em : 0;
+		return `${ maker.ratio * 1.07 + labelWidth }em`;
+	};
 
 	stack.innerHTML = MAKERS.map(
 		( maker ) =>
@@ -109,7 +114,7 @@ function startMakers() {
 	const show = () => {
 		const maker = MAKERS[ index ];
 		layers.forEach( ( layer, at ) => layer.classList.toggle( 'now', at === index ) );
-		stack.style.width = widthOf( maker );
+		stack.style.width = widthOf( maker, layers[ index ] );
 		link.href = maker.href;
 		link.setAttribute( 'aria-label', maker.name );
 	};
@@ -174,9 +179,9 @@ function showForm( prefill: string ) {
 				<li><strong>Paste your address.</strong> We copy your pages, images and design. Your site
 					stays exactly as it is.</li>
 				<li><strong>Download your WordPress site.</strong> You get one file you can open in
-					<a href="https://developer.wordpress.com/studio/">Studio</a>, the free WordPress app,
+					<a href="https://developer.wordpress.com/studio/">WordPress Studio</a>, the free app,
 					and change on your own computer.</li>
-				<li><strong>Put it online.</strong> Push it to WordPress.com from Studio, or take it to any
+				<li><strong>Put it online.</strong> Push it to WordPress.com from WordPress Studio, or take it to any
 					WordPress host.</li>
 			</ol>
 		</details>`;
@@ -420,21 +425,21 @@ const done = ( job: JobView ) => `
 		or any WordPress host.
 	</p>
 	<p class="hosts try">
-		In no hurry? Open it in <a href="https://developer.wordpress.com/studio/">Studio</a>, the free
-		WordPress app, and make it yours on your own machine first — change the colours, rewrite the
+		In no hurry? Open it in <a href="https://developer.wordpress.com/studio/">WordPress Studio</a>, the free
+		app, and make it yours on your own machine first — change the colours, rewrite the
 		words, break things. Publish when it feels like yours. Working with an AI agent that knows
-		Studio? Copy the setup prompt, paste it in, and it does the setting up for you.
+		WordPress Studio? Copy the setup prompt, paste it in, and it does the setting up for you.
 	</p>
 	<details class="how">
 		<summary>How do I move in?</summary>
 		<ol>
-			<li>Install <a href="https://developer.wordpress.com/studio/">Studio</a>, the free local
-				WordPress app for Mac, Windows and Linux.</li>
-			<li>Add a site in Studio, open its <strong>Import / Export</strong> tab, and drop this zip
+			<li>Install <a href="https://developer.wordpress.com/studio/">WordPress Studio</a>, the free local
+				app for Mac, Windows and Linux.</li>
+			<li>Add a site in WordPress Studio, open its <strong>Import / Export</strong> tab, and drop this zip
 				in. It replaces that site's files and database with yours.</li>
 			<li>Open the site. It runs on your own machine, so you can rewrite pages, swap the theme and
 				fix whatever came across badly, with nothing public and nothing to pay for.</li>
-			<li>When it's ready, <strong>Connect site</strong> points Studio at a WordPress.com site —
+			<li>When it's ready, <strong>Connect site</strong> points WordPress Studio at a WordPress.com site —
 				it can create one for you — and <strong>Push</strong> puts your copy online.
 				<a href="https://developer.wordpress.com/docs/developer-tools/studio/sync/">Sync</a> keeps
 				working after that: push again when you change something, pull to bring the live site
@@ -456,7 +461,8 @@ function wireCopyPrompt( job: JobView ) {
 		try {
 			await navigator.clipboard.writeText( prompt );
 			fallback.hidden = true;
-			status.textContent = 'Copied. Paste it into Claude, or any agent that can use Studio.';
+			status.textContent =
+				'Copied. Paste it into Claude, or any agent that can use WordPress Studio.';
 		} catch {
 			// No clipboard (an insecure origin, a denied permission): hand it over to copy by hand.
 			fallback.value = prompt;

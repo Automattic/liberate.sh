@@ -6,7 +6,7 @@ Paste a website's address and get it back as a WordPress site you can host anywh
 
 Plenty of people are on a closed site builder — Wix, Squarespace, Shopify, Webflow, GoDaddy — with no easy way to leave and take their site with them. liberate.sh copies the site, rebuilds it as WordPress, and hands you the result as a zip.
 
-What you get is a WordPress site folder: your pages and media, and a theme carrying the original look. It opens in [Studio](https://developer.wordpress.com/studio/), the free WordPress app, which can push it to WordPress.com or Pressable. Hosts that run WordPress on SQLite can take it as it is; anywhere else, Studio is the way in.
+What you get is a WordPress site folder: your pages and media, and a theme carrying the original look. It opens in [WordPress Studio](https://developer.wordpress.com/studio/), the free WordPress app, which can push it to WordPress.com or Pressable. Hosts that run WordPress on SQLite can take it as it is; anywhere else, WordPress Studio is the way in.
 
 ## How it works
 
@@ -62,5 +62,5 @@ The service copies arbitrary websites on request, so:
 
 - Fidelity is whatever the capture and the importer manage on their own. No AI is involved, and intricate designs come back imperfect.
 - A copied site is a large download, mostly media and WordPress itself.
-- WordPress on SQLite isn't what most hosts run, so moving in usually means going through Studio.
+- WordPress on SQLite isn't what most hosts run, so moving in usually means going through WordPress Studio.
 - The daily limit is the whole service's ceiling, not a per-visitor one.
