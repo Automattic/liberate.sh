@@ -162,8 +162,8 @@ function showForm( prefill: string ) {
 			<p class="error" role="alert"></p>
 		</form>
 		<p class="fine">
-			Turn your Wix, Squarespace, Shopify or Webflow site into a WordPress site you can download
-			and host anywhere. It’s free, and your current site isn’t touched.
+			Turn any website into a WordPress site you can download and host anywhere. It’s free,
+			and your current site isn’t touched.
 		</p>
 		<p class="fine">
 			We keep your converted copy for ${ retention() } so you can download it, then delete it.
