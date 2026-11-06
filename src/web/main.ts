@@ -167,7 +167,19 @@ function showForm( prefill: string ) {
 		</p>
 		<p class="fine">
 			We keep your converted copy for ${ retention() } so you can download it, then delete it.
-		</p>`;
+		</p>
+		<details class="how">
+			<summary>How does it work?</summary>
+			<ol>
+				<li><strong>Paste your address.</strong> We copy your pages, images and design. Your site
+					stays exactly as it is.</li>
+				<li><strong>Download your WordPress site.</strong> You get one file you can open in
+					<a href="https://developer.wordpress.com/studio/">Studio</a>, the free WordPress app,
+					and change on your own computer.</li>
+				<li><strong>Put it online.</strong> Push it to WordPress.com from Studio, or take it to any
+					WordPress host.</li>
+			</ol>
+		</details>`;
 
 	const word = stage.querySelector( '.x' )!;
 	const form = stage.querySelector( 'form' )!;
