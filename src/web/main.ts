@@ -179,10 +179,10 @@ function showForm( prefill: string ) {
 				<li><strong>Paste your address.</strong> We copy your pages, images and design. Your site
 					stays exactly as it is.</li>
 				<li><strong>Download your WordPress site.</strong> You get one file you can open in
-					<a href="https://developer.wordpress.com/studio/">WordPress Studio</a>, the free app,
-					and change on your own computer.</li>
-				<li><strong>Put it online.</strong> Push it to WordPress.com from WordPress Studio, or take it to any
-					WordPress host.</li>
+					<a href="https://developer.wordpress.com/studio/">WordPress Studio</a>, the free, open-source desktop app for Mac,
+					Windows and Linux, and change on your own computer.</li>
+				<li><strong>Put it online.</strong> Publish it from WordPress Studio to WordPress.com or
+					Pressable, or take it to any WordPress host.</li>
 			</ol>
 		</details>`;
 
@@ -425,25 +425,23 @@ const done = ( job: JobView ) => `
 		or any WordPress host.
 	</p>
 	<p class="hosts try">
-		In no hurry? Open it in <a href="https://developer.wordpress.com/studio/">WordPress Studio</a>, the free
-		app, and make it yours on your own machine first — change the colours, rewrite the
-		words, break things. Publish when it feels like yours. Working with an AI agent that knows
-		WordPress Studio? Copy the setup prompt, paste it in, and it does the setting up for you.
+		In no hurry? Open it in <a href="https://developer.wordpress.com/studio/">WordPress Studio</a>, the free,
+		open-source desktop app, and make it yours on your own machine first — change the colours,
+		rewrite the words, break things. Publish when it feels like yours. Building with Claude Code,
+		Codex or Cursor? Copy the setup prompt, paste it in, and it does the setting up for you.
 	</p>
 	<details class="how">
 		<summary>How do I move in?</summary>
 		<ol>
-			<li>Install <a href="https://developer.wordpress.com/studio/">WordPress Studio</a>, the free local
-				app for Mac, Windows and Linux.</li>
-			<li>Add a site in WordPress Studio, open its <strong>Import / Export</strong> tab, and drop this zip
-				in. It replaces that site's files and database with yours.</li>
-			<li>Open the site. It runs on your own machine, so you can rewrite pages, swap the theme and
-				fix whatever came across badly, with nothing public and nothing to pay for.</li>
-			<li>When it's ready, <strong>Connect site</strong> points WordPress Studio at a WordPress.com site —
-				it can create one for you — and <strong>Push</strong> puts your copy online.
-				<a href="https://developer.wordpress.com/docs/developer-tools/studio/sync/">Sync</a> keeps
-				working after that: push again when you change something, pull to bring the live site
-				back down.</li>
+			<li>Install <a href="https://developer.wordpress.com/studio/">WordPress Studio</a>, the free,
+				open-source desktop app for Mac, Windows and Linux.</li>
+			<li>Add a site, choose <strong>Import</strong>, and drop this zip in. WordPress Studio
+				creates a site from your files and database.</li>
+			<li>Open the site. It runs on your own computer, so you can rewrite pages, swap the theme, or
+				ask the agent to fix whatever came across badly, with nothing public and nothing to pay
+				for.</li>
+			<li>When it's ready, <strong>Publish</strong> pushes your site to WordPress.com or
+				Pressable. Publish again when you change something, or pull changes back down.</li>
 		</ol>
 		<p><strong>Somewhere else?</strong> The zip holds your <code>wp-content</code> folder and your
 			site's database, so you can take it to any WordPress host.</p>
@@ -462,7 +460,7 @@ function wireCopyPrompt( job: JobView ) {
 			await navigator.clipboard.writeText( prompt );
 			fallback.hidden = true;
 			status.textContent =
-				'Copied. Paste it into Claude, or any agent that can use WordPress Studio.';
+				'Copied. Paste it into Claude Code, Codex, or any agent connected to WordPress Studio.';
 		} catch {
 			// No clipboard (an insecure origin, a denied permission): hand it over to copy by hand.
 			fallback.value = prompt;

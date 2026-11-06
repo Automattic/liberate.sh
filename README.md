@@ -6,7 +6,7 @@ Paste a website's address and get it back as a WordPress site you can host anywh
 
 Plenty of people are on a closed site builder — Wix, Squarespace, Shopify, Webflow, GoDaddy — with no easy way to leave and take their site with them. liberate.sh copies the site, rebuilds it as WordPress, and hands you the result as a zip.
 
-What you get is a WordPress site folder: your pages and media, and a theme carrying the original look. It opens in [WordPress Studio](https://developer.wordpress.com/studio/), the free WordPress app, which can push it to WordPress.com or Pressable. Hosts that run WordPress on SQLite can take it as it is; anywhere else, WordPress Studio is the way in.
+What you get is a WordPress site folder: your pages and media, and a theme carrying the original look. It opens in [WordPress Studio](https://developer.wordpress.com/studio/), the free, open-source desktop app, which can push it to WordPress.com or Pressable. Hosts that run WordPress on SQLite can take it as it is; anywhere else, WordPress Studio is the way in.
 
 ## How it works
 
