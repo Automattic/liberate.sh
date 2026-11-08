@@ -390,6 +390,15 @@ function expiry( timestamp: number | undefined ) {
 	return new Intl.RelativeTimeFormat( 'en', { numeric: 'auto' } ).format( hours, 'hour' );
 }
 
+/**
+ * Hands the download to WordPress Studio, which opens Add site with it selected. The link names the
+ * stable download endpoint, because the signed URL behind it expires within minutes.
+ */
+const studioLink = ( job: JobView ) =>
+	`wp-studio://app/v1/import-site?url=${ encodeURIComponent(
+		`${ window.location.origin }/api/jobs/${ job.id }/files/site`
+	) }&name=${ encodeURIComponent( `${ job.host }.zip` ) }`;
+
 const done = ( job: JobView ) => `
 	${
 		platformFromHost( job.host )
@@ -407,6 +416,9 @@ const done = ( job: JobView ) => `
 		</a>`
 				: ''
 		}
+		<a class="button" href="${ escape( studioLink( job ) ) }">
+			Open in WordPress Studio <small>free desktop app</small>
+		</a>
 		<a class="button${ job.launchUrl ? '' : ' primary' }" href="/api/jobs/${
 			job.id
 		}/files/site" download>
@@ -425,18 +437,19 @@ const done = ( job: JobView ) => `
 		or any WordPress host.
 	</p>
 	<p class="hosts try">
-		In no hurry? Open it in <a href="https://developer.wordpress.com/studio/">WordPress Studio</a>, the free,
-		open-source desktop app, and make it yours on your own machine first — change the colours,
+		In no hurry? Open it in WordPress Studio, the free, open-source desktop app, and make it yours on your own machine first — change the colours,
 		rewrite the words, break things. Publish when it feels like yours. Building with Claude Code,
 		Codex or Cursor? Copy the setup prompt, paste it in, and it does the setting up for you.
+		Don't have WordPress Studio? <a href="https://developer.wordpress.com/studio/">Get it free</a>.
 	</p>
 	<details class="how">
 		<summary>How do I move in?</summary>
 		<ol>
 			<li>Install <a href="https://developer.wordpress.com/studio/">WordPress Studio</a>, the free,
 				open-source desktop app for Mac, Windows and Linux.</li>
-			<li>Add a site, choose <strong>Import</strong>, and drop this zip in. WordPress Studio
-				creates a site from your files and database.</li>
+			<li>Choose <strong>Open in WordPress Studio</strong>, or add a site, choose
+				<strong>Import</strong>, and drop this zip in. WordPress Studio creates a site from your
+				files and database.</li>
 			<li>Open the site. It runs on your own computer, so you can rewrite pages, swap the theme, or
 				ask the agent to fix whatever came across badly, with nothing public and nothing to pay
 				for.</li>
